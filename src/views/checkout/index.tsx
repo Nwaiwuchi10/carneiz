@@ -139,13 +139,22 @@ export default function CheckoutView() {
 
   // Check Flutterwave redirect callback
   useEffect(() => {
-    const statusParam = searchParams.get('status');
-    const orderIdParam = searchParams.get('orderId');
+    const statusParam = searchParams.get('status')?.toLowerCase();
+    const orderIdParam = searchParams.get('orderId') || searchParams.get('tx_ref');
     const txIdParam = searchParams.get('transaction_id');
 
-    if (statusParam === 'success' || orderIdParam) {
+    const isSuccessful =
+      statusParam === 'success' ||
+      statusParam === 'successful' ||
+      statusParam === 'completed' ||
+      Boolean(orderIdParam && statusParam !== 'cancelled' && statusParam !== 'failed');
+
+    if (isSuccessful) {
       setStep(2);
-      if (orderIdParam) setConfirmedOrderId(orderIdParam);
+      if (orderIdParam) {
+        const cleanRef = orderIdParam.startsWith('#') ? orderIdParam : `#${orderIdParam.replace(/^carneiz_tx_/, 'CMZ-2026-')}`;
+        setConfirmedOrderId(cleanRef);
+      }
       dispatch(clearCart());
 
       // Verify payment with backend
@@ -154,6 +163,7 @@ export default function CheckoutView() {
         .then((r) => r.json())
         .then((d) => {
           if (d.deliveryPin) setConfirmedDeliveryPin(d.deliveryPin);
+          if (d.order?.orderId) setConfirmedOrderId(d.order.orderId);
           setResponseMsg({ text: 'Payment verified! Your order confirmation and PIN have been generated.', type: 'success' });
         })
         .catch(() => {});
@@ -223,9 +233,6 @@ export default function CheckoutView() {
         ? `In-Store Pickup (${storeConfig.pickupHours})` 
         : deliveryOption.estimate,
       paymentMethod: 'flutterwave',
-      redirect_url: typeof window !== 'undefined'
-        ? (process.env.NEXT_PUBLIC_CALLBACK_URL || `${window.location.origin}/checkout`)
-        : (process.env.NEXT_PUBLIC_CALLBACK_URL || 'https://carneiz-eta.vercel.app/checkout'),
     };
 
     try {
