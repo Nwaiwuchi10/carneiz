@@ -34,8 +34,8 @@ export default function CheckoutView() {
 
   const [deliveryOption, setDeliveryOption] = useState<{ id: string; name: string; estimate: string; fee: number }>({
     id: 'standard',
-    name: 'Standard 2-3 Days Delivery',
-    estimate: 'Delivered by Thursday, May 14',
+    name: 'Standard Cold-Chain Delivery',
+    estimate: 'Delivered in 2-3 business days',
     fee: 2500,
   });
 
@@ -64,6 +64,7 @@ export default function CheckoutView() {
   // Confirmed order state matching Images 1, 2, 3
   const [confirmedOrderId, setConfirmedOrderId] = useState<string>('');
   const [confirmedDeliveryPin, setConfirmedDeliveryPin] = useState<string>('');
+  const [confirmedOrderData, setConfirmedOrderData] = useState<any>(null);
   const [copiedPin, setCopiedPin] = useState<boolean>(false);
 
   // Authentication check: redirect unauthenticated users to login
@@ -163,7 +164,18 @@ export default function CheckoutView() {
         .then((r) => r.json())
         .then((d) => {
           if (d.deliveryPin) setConfirmedDeliveryPin(d.deliveryPin);
-          if (d.order?.orderId) setConfirmedOrderId(d.order.orderId);
+          if (d.order) {
+            setConfirmedOrderData(d.order);
+            if (d.order.orderId) setConfirmedOrderId(d.order.orderId);
+            if (d.order.customer) {
+              setFormData((prev) => ({
+                ...prev,
+                fullName: d.order.customer.name || prev.fullName,
+                phoneNumber: d.order.customer.phone || prev.phoneNumber,
+                streetAddress: d.order.customer.address || prev.streetAddress,
+              }));
+            }
+          }
           setResponseMsg({ text: 'Payment verified! Your order confirmation and PIN have been generated.', type: 'success' });
         })
         .catch(() => {});
@@ -402,12 +414,17 @@ export default function CheckoutView() {
                   </h4>
                   <div className="text-xs text-gray-600 space-y-1">
                     <p className="m-0 font-medium text-gray-900">Recipient</p>
-                    <p className="m-0 text-gray-500">{formData.fullName} • {formData.phoneNumber}</p>
+                    <p className="m-0 text-gray-700 font-medium">
+                      {(confirmedOrderData?.customer?.name || formData.fullName || 'Valued Customer')}
+                      {(confirmedOrderData?.customer?.phone || formData.phoneNumber) ? ` • ${confirmedOrderData?.customer?.phone || formData.phoneNumber}` : ''}
+                    </p>
                     <p className="m-0 font-medium text-gray-900 pt-2">
                       {fulfillmentType === 'pickup' ? 'Carneiz Store Address' : 'Address'}
                     </p>
                     <p className="m-0 text-gray-700 font-medium">
-                      {fulfillmentType === 'pickup' ? storeConfig.pickupAddress : `${formData.streetAddress}, ${formData.city}, ${formData.state}`}
+                      {fulfillmentType === 'pickup' 
+                        ? (confirmedOrderData?.pickupAddress || storeConfig.pickupAddress) 
+                        : (confirmedOrderData?.customer?.address || `${formData.streetAddress || ''}${formData.city ? `, ${formData.city}` : ''}${formData.state ? `, ${formData.state}` : ''}`.trim() || 'Address registered on file')}
                     </p>
                   </div>
                 </div>
@@ -421,7 +438,9 @@ export default function CheckoutView() {
                       {fulfillmentType === 'pickup' ? 'Pickup Schedule' : 'Delivery Window'}
                     </p>
                     <p className="m-0 text-[#16a34a] font-bold">
-                      {fulfillmentType === 'pickup' ? storeConfig.pickupHours : deliveryOption.estimate}
+                      {fulfillmentType === 'pickup' 
+                        ? storeConfig.pickupHours 
+                        : (confirmedOrderData?.deliveryWindow || deliveryOption.estimate || 'Standard Cold-Chain Delivery (2-3 Business Days)')}
                     </p>
                     <p className="m-0 font-medium text-gray-900 pt-2">Notification Setup</p>
                     <p className="m-0 text-gray-500">Order confirmation SMS & Email has been dispatched.</p>
@@ -433,7 +452,7 @@ export default function CheckoutView() {
               <div className="flex justify-between items-baseline pt-2 mb-8">
                 <span className="text-base font-extrabold text-gray-900">Total Paid</span>
                 <span className="text-2xl font-black text-[#7A1A1A]">
-                  ₦{finalTotal.toLocaleString()}
+                  ₦{(confirmedOrderData?.total ? Number(confirmedOrderData.total) : finalTotal).toLocaleString()}
                 </span>
               </div>
 
