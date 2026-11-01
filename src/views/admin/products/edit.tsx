@@ -6,6 +6,7 @@ import { Bold, Italic, Underline, AlignLeft, Link as LinkIcon, Upload, Trash2, P
 import { productsService } from "@/src/services/admin/products.service";
 import Link from "next/link";
 import AdminResponseModal from "@/src/components/AdminResponseModal";
+import DeleteConfirmationModal from "@/src/components/DeleteConfirmationModal";
 
 export default function AdminProductEditView() {
   const params = useParams();
@@ -16,6 +17,11 @@ export default function AdminProductEditView() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    type: 'product' | 'cover' | 'gallery_existing' | 'gallery_new';
+    index?: number;
+  }>({ isOpen: false, type: 'product' });
   const [product, setProduct] = useState<any>(null);
   const [modal, setModal] = useState<{
     isOpen: boolean;
@@ -207,7 +213,7 @@ export default function AdminProductEditView() {
               </Link>
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={() => setDeleteConfirm({ isOpen: true, type: 'product' })}
                 disabled={isDeleting || isSaving || isSavingDraft}
                 className="px-3.5 py-2 bg-red-50 text-red-600 border border-red-200 text-sm font-bold rounded-lg hover:bg-red-100 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
               >
@@ -301,11 +307,8 @@ export default function AdminProductEditView() {
                     <button 
                       type="button"
                       title="Delete cover image"
-                      onClick={() => {
-                        setCoverImage(null);
-                        setExistingImageUrl('');
-                      }}
-                      className="p-1.5 bg-white rounded-full text-red-600 hover:bg-red-50 transition-colors shadow"
+                      onClick={() => setDeleteConfirm({ isOpen: true, type: 'cover' })}
+                      className="p-1.5 bg-white rounded-full text-red-600 hover:bg-red-50 transition-colors shadow cursor-pointer border-none"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -322,10 +325,8 @@ export default function AdminProductEditView() {
                     <button 
                       type="button"
                       title="Delete image"
-                      onClick={() => {
-                        setExistingImages(prev => prev.filter((_, i) => i !== idx));
-                      }} 
-                      className="p-2 bg-white rounded-full text-red-600 hover:bg-red-50 transition-colors"
+                      onClick={() => setDeleteConfirm({ isOpen: true, type: 'gallery_existing', index: idx })} 
+                      className="p-2 bg-white rounded-full text-red-600 hover:bg-red-50 transition-colors cursor-pointer border-none"
                     >
                       <Trash2 size={16}/>
                     </button>
@@ -341,12 +342,8 @@ export default function AdminProductEditView() {
                     <button 
                       type="button"
                       title="Delete image"
-                      onClick={() => {
-                        const updated = [...newImages];
-                        updated.splice(idx, 1);
-                        setNewImages(updated);
-                      }} 
-                      className="p-2 bg-white rounded-full text-red-600 hover:bg-red-50 transition-colors"
+                      onClick={() => setDeleteConfirm({ isOpen: true, type: 'gallery_new', index: idx })} 
+                      className="p-2 bg-white rounded-full text-red-600 hover:bg-red-50 transition-colors cursor-pointer border-none"
                     >
                       <Trash2 size={16}/>
                     </button>
@@ -484,6 +481,47 @@ export default function AdminProductEditView() {
         </div>
 
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirm.isOpen}
+        title={
+          deleteConfirm.type === 'product'
+            ? 'Delete Product?'
+            : deleteConfirm.type === 'cover'
+            ? 'Remove Primary Cover Image?'
+            : 'Remove Gallery Photo?'
+        }
+        message={
+          deleteConfirm.type === 'product'
+            ? 'Are you sure you want to delete this product? All variants, images, and catalog mappings will be permanently removed.'
+            : deleteConfirm.type === 'cover'
+            ? 'Are you sure you want to remove the primary cover image for this product?'
+            : 'Are you sure you want to remove this photo from the product gallery?'
+        }
+        itemName={deleteConfirm.type === 'product' ? formData.name : undefined}
+        confirmText={deleteConfirm.type === 'product' ? 'Yes, Delete' : 'Remove Image'}
+        isDeleting={isDeleting}
+        onConfirm={async () => {
+          if (deleteConfirm.type === 'product') {
+            setDeleteConfirm({ isOpen: false, type: 'product' });
+            await handleDelete();
+          } else if (deleteConfirm.type === 'cover') {
+            setCoverImage(null);
+            setExistingImageUrl('');
+            setDeleteConfirm({ isOpen: false, type: 'product' });
+          } else if (deleteConfirm.type === 'gallery_existing' && deleteConfirm.index !== undefined) {
+            setExistingImages(prev => prev.filter((_, i) => i !== deleteConfirm.index));
+            setDeleteConfirm({ isOpen: false, type: 'product' });
+          } else if (deleteConfirm.type === 'gallery_new' && deleteConfirm.index !== undefined) {
+            const updated = [...newImages];
+            updated.splice(deleteConfirm.index, 1);
+            setNewImages(updated);
+            setDeleteConfirm({ isOpen: false, type: 'product' });
+          }
+        }}
+        onClose={() => setDeleteConfirm({ isOpen: false, type: 'product' })}
+      />
     </div>
   );
 }

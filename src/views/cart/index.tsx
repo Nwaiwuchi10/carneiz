@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Trash2, Loader2, ArrowRight } from 'lucide-react';
+import DeleteConfirmationModal from '@/src/components/DeleteConfirmationModal';
 import { useAppDispatch, useAppSelector } from '@/src/redux/hooks';
 import {
   removeFromCart,
@@ -25,6 +26,13 @@ export default function CartView() {
   const [isApplying, setIsApplying] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [alertMsg, setAlertMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Delete modal state
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    type: 'single' | 'all';
+    item?: { id: string; weight: string; name: string };
+  }>({ isOpen: false, type: 'single' });
 
   const subtotal = items.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   const discountAmount = discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0;
@@ -99,10 +107,10 @@ export default function CartView() {
           {items.length > 0 && (
             <button
               onClick={() => {
-                if (window.confirm('Are you sure you want to clear all items from your cart?')) {
-                  dispatch(clearCart());
-                  setAlertMsg({ text: 'All items removed from cart.', type: 'success' });
-                }
+                setDeleteModal({
+                  isOpen: true,
+                  type: 'all',
+                });
               }}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors cursor-pointer w-fit"
             >
@@ -227,7 +235,11 @@ export default function CartView() {
                           </span>
                           <button
                             onClick={() =>
-                              dispatch(removeFromCart({ id: item._id, weight: item.weight }))
+                              setDeleteModal({
+                                isOpen: true,
+                                type: 'single',
+                                item: { id: item._id, weight: item.weight, name: item.name },
+                              })
                             }
                             title="Remove item"
                             className="w-8 h-8 rounded-full bg-[#fcedec] hover:bg-[#fadbd8] text-[#7A1A1A] flex items-center justify-center border-none cursor-pointer transition-colors p-0"
@@ -352,6 +364,30 @@ export default function CartView() {
 
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        title={deleteModal.type === 'all' ? 'Clear Entire Cart?' : 'Remove Item from Cart?'}
+        message={
+          deleteModal.type === 'all'
+            ? 'Are you sure you want to remove all butchery products from your cart? You will need to re-select your cuts.'
+            : 'Are you sure you want to remove this item from your cart?'
+        }
+        itemName={deleteModal.type === 'single' ? deleteModal.item?.name : undefined}
+        confirmText={deleteModal.type === 'all' ? 'Clear Cart' : 'Remove'}
+        onConfirm={() => {
+          if (deleteModal.type === 'all') {
+            dispatch(clearCart());
+            setAlertMsg({ text: 'All items removed from cart.', type: 'success' });
+          } else if (deleteModal.item) {
+            dispatch(removeFromCart({ id: deleteModal.item.id, weight: deleteModal.item.weight }));
+            setAlertMsg({ text: `Removed ${deleteModal.item.name} from cart.`, type: 'success' });
+          }
+          setDeleteModal({ isOpen: false, type: 'single' });
+        }}
+        onClose={() => setDeleteModal({ isOpen: false, type: 'single' })}
+      />
     </div>
   );
 }

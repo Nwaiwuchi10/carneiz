@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { X, Trash2, Loader2 } from 'lucide-react';
+import DeleteConfirmationModal from '@/src/components/DeleteConfirmationModal';
 import { useAppDispatch, useAppSelector } from '@/src/redux/hooks';
 import {
   setCartOpen,
@@ -23,6 +24,12 @@ export default function CartDrawer() {
   const [inputCode, setInputCode] = useState(discountCode || '');
   const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [discountMsg, setDiscountMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Delete modal state
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    item?: { id: string; weight: string; name: string };
+  }>({ isOpen: false });
 
   if (!isOpen) return null;
 
@@ -182,7 +189,10 @@ export default function CartDrawer() {
                   {/* Trash Icon matching Screenshot 1 */}
                   <button
                     onClick={() =>
-                      dispatch(removeFromCart({ id: item._id, weight: item.weight }))
+                      setDeleteModal({
+                        isOpen: true,
+                        item: { id: item._id, weight: item.weight, name: item.name },
+                      })
                     }
                     title="Remove item"
                     className="w-8 h-8 rounded-full bg-[#fcedec] hover:bg-[#fadbd8] text-[#7A1A1A] flex items-center justify-center border-none cursor-pointer shrink-0 transition-colors"
@@ -247,6 +257,22 @@ export default function CartDrawer() {
           )}
         </div>
       </div>
+
+      {/* Delete Item Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        title="Remove Item from Cart?"
+        message="Are you sure you want to remove this item from your cart?"
+        itemName={deleteModal.item?.name}
+        confirmText="Remove"
+        onConfirm={() => {
+          if (deleteModal.item) {
+            dispatch(removeFromCart({ id: deleteModal.item.id, weight: deleteModal.item.weight }));
+          }
+          setDeleteModal({ isOpen: false });
+        }}
+        onClose={() => setDeleteModal({ isOpen: false })}
+      />
     </div>
   );
 }

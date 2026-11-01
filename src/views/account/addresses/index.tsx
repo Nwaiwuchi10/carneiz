@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Pencil, Trash2, Plus, Phone, Loader2, X, CheckCircle2 } from 'lucide-react';
 import AccountLayout from '@/src/components/Account/AccountLayout';
+import DeleteConfirmationModal from '@/src/components/DeleteConfirmationModal';
 
 export interface AddressItem {
   id: string;
@@ -25,6 +26,11 @@ export default function SavedAddressesView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: string; title: string }>({
+    isOpen: false,
+    id: '',
+    title: '',
+  });
 
   const [formData, setFormData] = useState({
     title: 'Home',
@@ -201,7 +207,7 @@ export default function SavedAddressesView() {
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleDeleteAddress(address.id)}
+                      onClick={() => setDeleteConfirm({ isOpen: true, id: address.id, title: address.title || address.streetAddress })}
                       title="Delete Address"
                       className="p-1.5 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border-none bg-transparent cursor-pointer"
                     >
@@ -369,6 +375,21 @@ export default function SavedAddressesView() {
           </div>
         </div>
       )}
+
+      {/* Delete Address Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirm.isOpen}
+        title="Delete Address?"
+        message="Are you sure you want to delete this saved delivery address?"
+        itemName={deleteConfirm.title}
+        confirmText="Yes, Delete"
+        onConfirm={async () => {
+          const id = deleteConfirm.id;
+          setDeleteConfirm({ isOpen: false, id: '', title: '' });
+          await handleDeleteAddress(id);
+        }}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: '', title: '' })}
+      />
 
     </AccountLayout>
   );

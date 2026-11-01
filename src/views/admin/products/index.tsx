@@ -5,6 +5,7 @@ import { Search, ChevronDown, Download, Plus, X, Upload, CheckCircle, Edit, Tras
 import Link from "next/link";
 import { productsService } from "@/src/services/admin/products.service";
 import AdminResponseModal from "@/src/components/AdminResponseModal";
+import DeleteConfirmationModal from "@/src/components/DeleteConfirmationModal";
 
 export default function AdminProductsView() {
   const [products, setProducts] = useState<any[]>([]);
@@ -24,6 +25,11 @@ export default function AdminProductsView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: '',
+    name: '',
+  });
   const [modal, setModal] = useState<{
     isOpen: boolean;
     type: 'success' | 'error' | 'info';
@@ -209,6 +215,23 @@ export default function AdminProductsView() {
         title={modal.title}
         message={modal.message}
         onClose={() => setModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirm.isOpen}
+        title="Delete Product?"
+        message="Are you sure you want to permanently delete this product from your inventory? Customers will no longer be able to purchase it."
+        itemName={deleteConfirm.name}
+        confirmText="Yes, Delete"
+        isDeleting={deletingId === deleteConfirm.id}
+        onConfirm={async () => {
+          const id = deleteConfirm.id;
+          const name = deleteConfirm.name;
+          setDeleteConfirm({ isOpen: false, id: '', name: '' });
+          await handleDeleteProduct(id, name);
+        }}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: '', name: '' })}
       />
 
       {/* ADD PRODUCT MODAL */}
@@ -476,7 +499,7 @@ export default function AdminProductsView() {
                             <Edit size={15} />
                           </Link>
                           <button 
-                            onClick={() => handleDeleteProduct(prod._id, prod.name)} 
+                            onClick={() => setDeleteConfirm({ isOpen: true, id: prod._id, name: prod.name })} 
                             disabled={deletingId === prod._id}
                             title="Delete Product" 
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors bg-transparent border-none cursor-pointer disabled:opacity-40"

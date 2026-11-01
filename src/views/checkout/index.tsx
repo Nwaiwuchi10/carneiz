@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Loader2, Copy, CheckCircle2, Trash2 } from 'lucide-react';
+import DeleteConfirmationModal from '@/src/components/DeleteConfirmationModal';
 import { useAppDispatch, useAppSelector } from '@/src/redux/hooks';
 import { clearCart } from '@/src/redux/slices/cartSlice';
 
@@ -58,6 +59,7 @@ export default function CheckoutView() {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [responseMsg, setResponseMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   
   // Confirmed order state matching Images 1, 2, 3
   const [confirmedOrderId, setConfirmedOrderId] = useState<string>('');
@@ -851,12 +853,7 @@ export default function CheckoutView() {
                   <h2 className="text-xl font-extrabold text-gray-900 m-0">Order Summary</h2>
                   {checkoutItems.length > 0 && (
                     <button
-                      onClick={() => {
-                        if (window.confirm('Are you sure you want to clear your cart?')) {
-                          dispatch(clearCart());
-                          router.push('/products');
-                        }
-                      }}
+                      onClick={() => setIsClearModalOpen(true)}
                       title="Clear all items in cart"
                       className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors border border-red-200 cursor-pointer"
                     >
@@ -938,6 +935,20 @@ export default function CheckoutView() {
           </div>
         )}
       </div>
+
+      {/* Clear Cart Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isClearModalOpen}
+        title="Clear Entire Cart?"
+        message="Are you sure you want to clear your current checkout order? All items will be removed and you will be returned to the store."
+        confirmText="Clear & Exit"
+        onConfirm={() => {
+          dispatch(clearCart());
+          setIsClearModalOpen(false);
+          router.push('/products');
+        }}
+        onClose={() => setIsClearModalOpen(false)}
+      />
     </div>
   );
 }

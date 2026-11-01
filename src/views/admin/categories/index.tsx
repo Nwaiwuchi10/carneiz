@@ -4,12 +4,18 @@ import React, { useState, useEffect, useRef } from "react";
 import { Plus, Edit2, Trash2, Menu, Upload, Loader2, X, Check } from "lucide-react";
 import { categoriesService } from "@/src/services/admin/categories.service";
 import AdminResponseModal from "@/src/components/AdminResponseModal";
+import DeleteConfirmationModal from "@/src/components/DeleteConfirmationModal";
 
 export default function AdminCategoriesView() {
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: '',
+    name: '',
+  });
   const [modal, setModal] = useState<{
     isOpen: boolean;
     type: 'success' | 'error' | 'info';
@@ -176,6 +182,23 @@ export default function AdminCategoriesView() {
         onClose={() => setModal(prev => ({ ...prev, isOpen: false }))}
       />
 
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirm.isOpen}
+        title="Delete Category?"
+        message="Are you sure you want to delete this category? Any associated products may become uncategorized."
+        itemName={deleteConfirm.name}
+        confirmText="Yes, Delete"
+        isDeleting={deletingId === deleteConfirm.id}
+        onConfirm={async () => {
+          const id = deleteConfirm.id;
+          const name = deleteConfirm.name;
+          setDeleteConfirm({ isOpen: false, id: '', name: '' });
+          await handleDelete({ stopPropagation: () => {} } as any, id, name);
+        }}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: '', name: '' })}
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
@@ -219,7 +242,10 @@ export default function AdminCategoriesView() {
                   <div className="flex gap-2">
                     <button onClick={() => selectCategory(cat)} className="p-1.5 text-gray-400 hover:text-gray-700 rounded"><Edit2 size={14} /></button>
                     <button 
-                      onClick={(e) => handleDelete(e, cat._id, cat.name)} 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirm({ isOpen: true, id: cat._id, name: cat.name });
+                      }} 
                       disabled={deletingId === cat._id}
                       className="p-1.5 text-gray-400 hover:text-red-600 rounded disabled:opacity-50 cursor-pointer"
                       title="Delete Category"

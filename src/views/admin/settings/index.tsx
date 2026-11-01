@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Loader2, Upload, Trash2, Key, ShieldCheck, Eye, EyeOff, Check } from "lucide-react";
 import { settingsService } from "@/src/services/admin/settings.service";
 import AdminResponseModal from "@/src/components/AdminResponseModal";
+import DeleteConfirmationModal from "@/src/components/DeleteConfirmationModal";
 
 export default function AdminSettingsView() {
   const [activeTab, setActiveTab] = useState<'general' | 'security' | 'notification'>('general');
@@ -14,6 +15,11 @@ export default function AdminSettingsView() {
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [deletePromoModal, setDeletePromoModal] = useState<{ isOpen: boolean; index: number; code: string }>({
+    isOpen: false,
+    index: -1,
+    code: '',
+  });
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -492,7 +498,7 @@ export default function AdminSettingsView() {
                         </button>
                         <button
                           type="button"
-                          onClick={removePromo}
+                          onClick={() => setDeletePromoModal({ isOpen: true, index: idx, code: promo.code || 'UNNAMED' })}
                           className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg cursor-pointer"
                           title="Delete coupon"
                         >
@@ -730,6 +736,28 @@ export default function AdminSettingsView() {
         )}
 
       </div>
+
+      {/* Delete Promo Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deletePromoModal.isOpen}
+        title="Delete Promo Code?"
+        message="Are you sure you want to delete this promo code? Customers will no longer be able to claim this discount."
+        itemName={deletePromoModal.code}
+        confirmText="Yes, Delete"
+        onConfirm={() => {
+          const list = [
+            ...((settings.general?.discountCodes && settings.general.discountCodes.length > 0)
+              ? settings.general.discountCodes
+              : [
+                  { code: 'CARNEIZ10', percent: 10, active: true, description: 'Newsletter Welcome 10% Discount' },
+                  { code: 'CARNEIZ5', percent: 5, active: true, description: 'General Store 5% Discount' }
+                ])
+          ].filter((_, i) => i !== deletePromoModal.index);
+          handleChange('general', 'discountCodes', list);
+          setDeletePromoModal({ isOpen: false, index: -1, code: '' });
+        }}
+        onClose={() => setDeletePromoModal({ isOpen: false, index: -1, code: '' })}
+      />
     </div>
   );
 }
