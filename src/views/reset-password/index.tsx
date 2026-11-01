@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { authService } from '@/src/services/auth.service';
 import Spinner from '@/src/components/Spinner';
 import Modal from '@/src/components/Modal';
+import { getErrorMessage } from '@/src/utils/errorHandler';
 
 export default function ResetPassword() {
   const [formData, setFormData] = useState({ newPassword: '', confirmPassword: '' });
@@ -39,7 +40,7 @@ export default function ResetPassword() {
       const res = await authService.resetPassword({ email, token, newPassword: formData.newPassword });
       setModal({ isOpen: true, message: res.message || 'Password reset successful!' });
     } catch (error: any) {
-      setModal({ isOpen: true, message: error.response?.data?.message || 'Password reset failed' });
+      setModal({ isOpen: true, message: getErrorMessage(error, 'Password reset failed. The link may have expired.') });
     } finally {
       setLoading(false);
     }

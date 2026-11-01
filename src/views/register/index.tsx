@@ -5,6 +5,7 @@ import { authService } from '@/src/services/auth.service';
 import Spinner from '@/src/components/Spinner';
 import Modal from '@/src/components/Modal';
 import { Eye, EyeOff } from 'lucide-react';
+import { getErrorMessage } from '@/src/utils/errorHandler';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -51,7 +52,7 @@ export default function Register() {
         window.location.href = redirectUrl;
       }, 1200);
     } catch (error: any) {
-      setModal({ isOpen: true, message: error.response?.data?.message || 'Registration failed' });
+      setModal({ isOpen: true, message: getErrorMessage(error, 'Registration failed. Please check your information and try again.') });
     } finally {
       setLoading(false);
     }

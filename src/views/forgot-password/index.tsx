@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { authService } from '@/src/services/auth.service';
 import Spinner from '@/src/components/Spinner';
 import Modal from '@/src/components/Modal';
+import { getErrorMessage } from '@/src/utils/errorHandler';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -17,7 +18,7 @@ export default function ForgotPassword() {
       const res = await authService.forgotPassword({ email });
       setModal({ isOpen: true, message: res.message || 'Password reset link sent!' });
     } catch (error: any) {
-      setModal({ isOpen: true, message: error.response?.data?.message || 'Failed to send reset link' });
+      setModal({ isOpen: true, message: getErrorMessage(error, 'Failed to send reset link. Please verify your email.') });
     } finally {
       setLoading(false);
     }

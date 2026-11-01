@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { authService } from '@/src/services/auth.service';
+import { getErrorMessage } from '@/src/utils/errorHandler';
 
 export default function Login() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function Login() {
       }, 1000);
     } catch (error: any) {
       setResponseMsg({
-        text: error.response?.data?.message || 'Invalid credentials. Please verify your email and password.',
+        text: getErrorMessage(error, 'Invalid credentials. Please verify your email and password.'),
         type: 'error',
       });
     } finally {
