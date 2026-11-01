@@ -34,7 +34,7 @@ export const CARNEIZ_CONTACT: CarneizContact = {
   phone: "+2347075723880",
   formattedPhone: "+234 707 572 3880",
   whatsappUrl: "https://wa.me/2347075723880",
-  email: "info@carneiz.com",
+  email: "carniezltd@gmail.com",
   websiteUrl: "https://www.carneiz.org",
   websiteDisplay: "www.carneiz.org",
   logoUrl: "/assets/images/logo-circle.png",
