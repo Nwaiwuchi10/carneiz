@@ -114,7 +114,7 @@ export default function AdminSettingsView() {
     if (!currentPassword || !newPassword) return;
     setIsSavingPassword(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const token = typeof window !== 'undefined' ? (localStorage.getItem('admin_token') || localStorage.getItem('token')) : null;
       const res = await fetch(`${apiUrl}/auth/admin/change-password`, {
         method: 'POST',

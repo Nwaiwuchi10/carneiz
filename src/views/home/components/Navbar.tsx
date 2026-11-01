@@ -39,7 +39,7 @@ export default function Navbar() {
 
   const fetchNotifCount = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       let userEmail = '';
       try {
         const stored = localStorage.getItem('carneiz_user') || localStorage.getItem('user');

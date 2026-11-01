@@ -33,7 +33,7 @@ export default function AdminLoginView() {
     setErrorMsg(null);
     setSuccessMsg(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4300";
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const cleanEmail = email.trim().toLowerCase();
 
       const res = await fetch(`${apiUrl}/auth/admin/login`, {

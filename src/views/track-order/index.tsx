@@ -65,7 +65,7 @@ export default function TrackOrderPage() {
     setToastMessage(null);
     try {
       const cleanId = orderIdToFetch.replace(/^#/, '');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const res = await fetch(`${apiUrl}/orders/${encodeURIComponent(cleanId)}/track`);
       
       if (res.ok) {
@@ -114,7 +114,7 @@ export default function TrackOrderPage() {
 
     try {
       const cleanId = order.orderId.replace(/^#/, '');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const res = await fetch(`${apiUrl}/orders/${encodeURIComponent(cleanId)}/confirm-delivery`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

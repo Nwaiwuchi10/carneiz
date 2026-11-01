@@ -79,7 +79,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         setIsAuthorized(true);
 
         // Verify token with backend
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4300";
+        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
         const verifyRes = await fetch(`${apiUrl}/auth/admin/verify`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -124,7 +124,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const fetchStatsAndNotifs = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4300";
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       
       // Fetch stats
       const statsRes = await fetch(`${apiUrl}/admin/dashboard/stats`);
@@ -171,7 +171,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const markAllAdminRead = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4300";
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       await fetch(`${apiUrl}/notifications/read-all`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -185,7 +185,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const markSingleAdminRead = async (notif: any) => {
     if (!notif.read && notif._id) {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4300";
+        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
         await fetch(`${apiUrl}/notifications/${notif._id}/read`, { method: "PATCH" });
         setAdminNotifs((prev) =>
           prev.map((n) => (n._id === notif._id ? { ...n, read: true } : n))

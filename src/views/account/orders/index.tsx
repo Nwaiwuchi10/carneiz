@@ -48,7 +48,7 @@ export default function OrderHistoryPage() {
   const fetchOrders = async (currentPage = 1, currentSearch = '', currentStatus = '') => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const statusParam = currentStatus && currentStatus !== 'All Statuses' ? `&status=${encodeURIComponent(currentStatus)}` : '';
       const searchParam = currentSearch ? `&search=${encodeURIComponent(currentSearch)}` : '';
       const res = await axios.get(`${apiUrl}/orders?page=${currentPage}&limit=6${searchParam}${statusParam}`);
@@ -149,7 +149,7 @@ export default function OrderHistoryPage() {
     e.preventDefault();
     setIsSubmittingReview(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       await axios.post(`${apiUrl}/products/review`, {
         productName: reviewProduct,
         rating,

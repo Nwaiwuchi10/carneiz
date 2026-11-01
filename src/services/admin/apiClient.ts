@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app'
+import { API_BASE_URL } from '../../config/api';
+
+export const API_URL = API_BASE_URL;
 // 'http://localhost:4300';
 export const ADMIN_API_BASE_URL = `${API_URL}/admin`;
 

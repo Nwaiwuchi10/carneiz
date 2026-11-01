@@ -103,7 +103,7 @@ export default function NotificationsPage() {
     }
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const emailParam = activeUser.email ? `email=${encodeURIComponent(activeUser.email)}` : '';
       const idParam = (activeUser.id || activeUser._id) ? `userId=${encodeURIComponent(activeUser.id || activeUser._id || '')}` : '';
       const query = [emailParam, idParam].filter(Boolean).join('&');
@@ -150,7 +150,7 @@ export default function NotificationsPage() {
   const markAllRead = async () => {
     if (!currentUser) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       await axios.patch(`${apiUrl}/notifications/read-all`, {
         recipientType: 'user',
         email: currentUser.email,
@@ -169,7 +169,7 @@ export default function NotificationsPage() {
     if (!notifId) return;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       await axios.patch(`${apiUrl}/notifications/${notifId}/read`);
       setNotifications((prev) =>
         prev.map((n) => ((n._id || n.id) === notifId ? { ...n, read: true } : n))

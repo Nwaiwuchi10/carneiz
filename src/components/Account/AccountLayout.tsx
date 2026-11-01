@@ -9,7 +9,7 @@ export default function AccountLayout({ children, activeTab }: { children: React
   React.useEffect(() => {
     const fetchCount = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
         let userEmail = '';
         try {
           const storedUser = localStorage.getItem('carneiz_user') || localStorage.getItem('user');

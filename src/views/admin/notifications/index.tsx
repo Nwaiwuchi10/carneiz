@@ -40,7 +40,7 @@ export default function AdminNotificationsView() {
 
   const fetchAdminNotifications = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4300";
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const res = await axios.get(`${apiUrl}/notifications/admin`);
       if (res.data?.data && Array.isArray(res.data.data)) {
         setNotifications(res.data.data);
@@ -63,7 +63,7 @@ export default function AdminNotificationsView() {
 
   const markAllRead = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4300";
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       await axios.patch(`${apiUrl}/notifications/read-all`, {
         recipientType: "admin",
       });
@@ -76,7 +76,7 @@ export default function AdminNotificationsView() {
   const markSingleRead = async (item: AdminNotification) => {
     if (item.read) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4300";
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       await axios.patch(`${apiUrl}/notifications/${item._id}/read`);
       setNotifications((prev) =>
         prev.map((n) => (n._id === item._id ? { ...n, read: true } : n))

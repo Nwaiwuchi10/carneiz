@@ -96,7 +96,7 @@ export default function CheckoutView() {
       }
     } catch {}
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
     fetch(`${apiUrl}/users/addresses`)
       .then((r) => r.json())
       .then((addrs) => {
@@ -115,7 +115,7 @@ export default function CheckoutView() {
 
   // Fetch admin configured delivery fee, service fee, and store pickup address
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
     fetch(`${apiUrl}/orders/config`)
       .then((r) => r.json())
       .then((cfg) => {
@@ -147,7 +147,7 @@ export default function CheckoutView() {
       dispatch(clearCart());
 
       // Verify payment with backend
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       fetch(`${apiUrl}/orders/verify?transaction_id=${txIdParam || ''}&orderId=${encodeURIComponent(orderIdParam || '')}`)
         .then((r) => r.json())
         .then((d) => {
@@ -224,7 +224,7 @@ export default function CheckoutView() {
     };
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const res = await fetch(`${apiUrl}/orders/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

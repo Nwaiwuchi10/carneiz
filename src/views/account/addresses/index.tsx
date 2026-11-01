@@ -40,7 +40,7 @@ export default function SavedAddressesView() {
   const fetchAddresses = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const res = await axios.get(`${apiUrl}/users/addresses`);
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setAddresses(res.data);
@@ -93,7 +93,7 @@ export default function SavedAddressesView() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
 
       if (editingAddressId) {
         // Edit existing address
@@ -141,7 +141,7 @@ export default function SavedAddressesView() {
 
   const handleDeleteAddress = async (idToDelete: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       await axios.delete(`${apiUrl}/users/addresses/${idToDelete}`);
     } catch (e) {}
 

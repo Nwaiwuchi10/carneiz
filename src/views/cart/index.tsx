@@ -38,7 +38,7 @@ export default function CartView() {
     setAlertMsg(null);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://carneiz-backend.vercel.app');
       const res = await fetch(`${apiUrl}/orders/validate-promo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
