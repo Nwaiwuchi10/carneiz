@@ -392,6 +392,119 @@ export default function AdminSettingsView() {
               </div>
             </div>
 
+            {/* PROMO & DISCOUNT CODES CONFIGURATION */}
+            <div className="mb-8 border-b border-gray-100 pb-8">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900">Promo & Discount Codes</h4>
+                  <p className="text-xs text-gray-500 mt-1">Manage active coupons that customers can use in their cart and checkout.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = settings.general?.discountCodes || [];
+                    handleChange('general', 'discountCodes', [
+                      ...current,
+                      { code: '', percent: 10, active: true, description: '' }
+                    ]);
+                  }}
+                  className="px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-lg hover:bg-black cursor-pointer transition-colors"
+                >
+                  + Add Coupon
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {((settings.general?.discountCodes && settings.general.discountCodes.length > 0)
+                  ? settings.general.discountCodes
+                  : [
+                      { code: 'CARNEIZ10', percent: 10, active: true, description: 'Newsletter Welcome 10% Discount' },
+                      { code: 'CARNEIZ5', percent: 5, active: true, description: 'General Store 5% Discount' }
+                    ]
+                ).map((promo: any, idx: number) => {
+                  const updatePromo = (field: string, val: any) => {
+                    const list = [
+                      ...((settings.general?.discountCodes && settings.general.discountCodes.length > 0)
+                        ? settings.general.discountCodes
+                        : [
+                            { code: 'CARNEIZ10', percent: 10, active: true, description: 'Newsletter Welcome 10% Discount' },
+                            { code: 'CARNEIZ5', percent: 5, active: true, description: 'General Store 5% Discount' }
+                          ])
+                    ];
+                    list[idx] = { ...list[idx], [field]: val };
+                    handleChange('general', 'discountCodes', list);
+                  };
+
+                  const removePromo = () => {
+                    const list = [
+                      ...((settings.general?.discountCodes && settings.general.discountCodes.length > 0)
+                        ? settings.general.discountCodes
+                        : [
+                            { code: 'CARNEIZ10', percent: 10, active: true, description: 'Newsletter Welcome 10% Discount' },
+                            { code: 'CARNEIZ5', percent: 5, active: true, description: 'General Store 5% Discount' }
+                          ])
+                    ].filter((_, i) => i !== idx);
+                    handleChange('general', 'discountCodes', list);
+                  };
+
+                  return (
+                    <div key={idx} className="p-3 bg-gray-50 border border-gray-200 rounded-xl flex flex-col md:flex-row items-center gap-3">
+                      <div className="w-full md:w-1/3">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Coupon Code</label>
+                        <input
+                          type="text"
+                          value={promo.code || ''}
+                          onChange={(e) => updatePromo('code', e.target.value.toUpperCase())}
+                          placeholder="e.g. CARNEIZ10"
+                          className="w-full px-3 py-1.5 text-xs font-mono font-bold bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#8b181c]"
+                        />
+                      </div>
+                      <div className="w-full md:w-1/4">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Discount %</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="90"
+                          value={promo.percent ?? 10}
+                          onChange={(e) => updatePromo('percent', Number(e.target.value))}
+                          className="w-full px-3 py-1.5 text-xs font-bold bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#8b181c]"
+                        />
+                      </div>
+                      <div className="w-full md:flex-1">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Description</label>
+                        <input
+                          type="text"
+                          value={promo.description || ''}
+                          onChange={(e) => updatePromo('description', e.target.value)}
+                          placeholder="e.g. Promo campaign"
+                          className="w-full px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#8b181c]"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 pt-4 md:pt-4">
+                        <button
+                          type="button"
+                          onClick={() => updatePromo('active', !promo.active)}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                            promo.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
+                          }`}
+                        >
+                          {promo.active ? 'Active' : 'Disabled'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={removePromo}
+                          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg cursor-pointer"
+                          title="Delete coupon"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="flex justify-end gap-3">
               <button 
                 onClick={() => handleSave('general')}

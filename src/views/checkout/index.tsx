@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ShieldCheck, Loader2, Copy, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Loader2, Copy, CheckCircle2, Trash2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/src/redux/hooks';
 import { clearCart } from '@/src/redux/slices/cartSlice';
 
@@ -213,6 +213,7 @@ export default function CheckoutView() {
       subtotal,
       deliveryFee: currentDeliveryFee,
       serviceFee: currentServiceFee,
+      discountCode: discountCode || undefined,
       discount: discountAmount,
       total: finalTotal,
       items: checkoutItems,
@@ -846,7 +847,24 @@ export default function CheckoutView() {
             {/* RIGHT COLUMN: ORDER SUMMARY matching Screenshot 4 & 5 */}
             <div className="lg:col-span-4">
               <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-7 shadow-sm sticky top-24 space-y-5">
-                <h2 className="text-xl font-extrabold text-gray-900 m-0">Order Summary</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-extrabold text-gray-900 m-0">Order Summary</h2>
+                  {checkoutItems.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to clear your cart?')) {
+                          dispatch(clearCart());
+                          router.push('/products');
+                        }
+                      }}
+                      title="Clear all items in cart"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors border border-red-200 cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Clear All</span>
+                    </button>
+                  )}
+                </div>
 
                 {/* Items preview matching Screenshot 4 & 5 */}
                 <div className="divide-y divide-gray-100 space-y-3 pt-1">

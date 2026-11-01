@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { authService } from '@/src/services/auth.service';
 import Spinner from '@/src/components/Spinner';
 import Modal from '@/src/components/Modal';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -15,6 +16,8 @@ export default function Register() {
     confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, message: '' });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,13 +86,47 @@ export default function Register() {
           </div>
           <div>
             <label className="block text-[0.85rem] font-bold mb-1 text-gray-800">Password</label>
-            <input type="password" name="password" placeholder="Create a secure password" value={formData.password} onChange={handleChange} required
-              className="w-full p-3 border border-gray-300 rounded-md text-[0.95rem] outline-none transition-colors duration-200 focus:border-[#8B1919]" />
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                name="password" 
+                placeholder="Create a secure password" 
+                value={formData.password} 
+                onChange={handleChange} 
+                required
+                className="w-full p-3 pr-11 border border-gray-300 rounded-md text-[0.95rem] outline-none transition-colors duration-200 focus:border-[#8B1919]" 
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer p-1 flex items-center justify-center transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-[0.85rem] font-bold mb-1 text-gray-800">Confirm Password</label>
-            <input type="password" name="confirmPassword" placeholder="Repeat your secure password" value={formData.confirmPassword} onChange={handleChange} required
-              className="w-full p-3 border border-gray-300 rounded-md text-[0.95rem] outline-none transition-colors duration-200 focus:border-[#8B1919]" />
+            <div className="relative">
+              <input 
+                type={showConfirmPassword ? "text" : "password"} 
+                name="confirmPassword" 
+                placeholder="Repeat your secure password" 
+                value={formData.confirmPassword} 
+                onChange={handleChange} 
+                required
+                className="w-full p-3 pr-11 border border-gray-300 rounded-md text-[0.95rem] outline-none transition-colors duration-200 focus:border-[#8B1919]" 
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer p-1 flex items-center justify-center transition-colors"
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           
           <button type="submit" disabled={loading} className="mt-4 bg-[#8B1919] hover:bg-[#6b1010] text-white p-4 border-none rounded-md font-bold cursor-pointer flex justify-center gap-2.5 transition-colors duration-200">

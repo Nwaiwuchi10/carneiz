@@ -10,6 +10,7 @@ import {
   updateQuantity,
   applyDiscount,
   removeDiscount,
+  clearCart,
 } from '@/src/redux/slices/cartSlice';
 
 export default function CartView() {
@@ -91,9 +92,25 @@ export default function CartView() {
       )}
 
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8">
-          Your Shopping Cart
-        </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 m-0">
+            Your Shopping Cart
+          </h1>
+          {items.length > 0 && (
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to clear all items from your cart?')) {
+                  dispatch(clearCart());
+                  setAlertMsg({ text: 'All items removed from cart.', type: 'success' });
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors cursor-pointer w-fit"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>CLEAR ALL CART</span>
+            </button>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
