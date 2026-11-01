@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight, Heart } from 'lucide-react';
 import { productService } from '@/src/services/product.service';
 import { useCart } from '@/src/context/CartContext';
 
@@ -21,7 +21,17 @@ export default function FeaturedProducts() {
   const [loading, setLoading] = useState(true);
   const [cartNotification, setCartNotification] = useState<string | null>(null);
   const [addingId, setAddingId] = useState<string | null>(null);
+  const [wishlistIds, setWishlistIds] = useState<string[]>([]);
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('carneiz_wishlist') || '[]');
+      if (Array.isArray(stored)) {
+        setWishlistIds(stored.map((p: any) => p._id));
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -91,9 +101,11 @@ export default function FeaturedProducts() {
       const exists = wishlist.some((p: any) => p._id === product._id);
       if (exists) {
         wishlist = wishlist.filter((p: any) => p._id !== product._id);
+        setWishlistIds(wishlist.map((p: any) => p._id));
         setCartNotification(`Removed ${product.name} from Wishlist`);
       } else {
         wishlist.push(product);
+        setWishlistIds(wishlist.map((p: any) => p._id));
         setCartNotification(`Added ${product.name} to Wishlist!`);
       }
       localStorage.setItem('carneiz_wishlist', JSON.stringify(wishlist));
@@ -155,13 +167,22 @@ export default function FeaturedProducts() {
                         />
                       </Link>
                       <div className="absolute top-1.5 right-1.5 z-10">
-                        <button
-                          onClick={(e) => handleToggleWishlist(e, product)}
-                          className="w-6 h-6 rounded-full bg-white border border-gray-200 cursor-pointer flex items-center justify-center text-[10px] shadow-xs text-gray-500 hover:text-[#7A1A1A]"
-                          title="Wishlist"
-                        >
-                          🤍
-                        </button>
+                        {(() => {
+                          const isLiked = wishlistIds.includes(product._id);
+                          return (
+                            <button
+                              onClick={(e) => handleToggleWishlist(e, product)}
+                              className={`w-6 h-6 rounded-full bg-white/95 backdrop-blur-xs border cursor-pointer flex items-center justify-center shadow-xs transition-all group/wish ${
+                                isLiked 
+                                  ? 'text-[#7A1A1A] border-[#7A1A1A]/40 bg-[#fdf2f2]' 
+                                  : 'text-gray-400 border-gray-200 hover:text-[#7A1A1A] hover:border-[#7A1A1A]/30'
+                              }`}
+                              title={isLiked ? "Remove from Wishlist" : "Add to Wishlist"}
+                            >
+                              <Heart className={`w-3.5 h-3.5 transition-transform group-hover/wish:scale-110 ${isLiked ? 'fill-[#7A1A1A]' : ''}`} />
+                            </button>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -236,20 +257,22 @@ export default function FeaturedProducts() {
                   <div>
                     <Link href={`/products/${product._id}`} className="block relative h-48 bg-gray-50 bg-cover bg-center overflow-hidden cursor-pointer" style={{ backgroundImage: `url(${product.imageUrl || '/assets/images/placeholder.jpg'})` }}>
                       <div className="absolute top-2 right-2 flex flex-row items-center gap-1.5 opacity-90 transition-all duration-200 group-hover:opacity-100 z-10">
-                        <button 
-                          onClick={(e) => handleAddToCompare(e, product)}
-                          title="Compare product" 
-                          className="w-7 h-7 rounded-full bg-white border border-gray-200 cursor-pointer flex items-center justify-center text-xs shadow-xs hover:bg-gray-50 hover:text-[#7A1A1A] transition-colors"
-                        >
-                          🔄
-                        </button>
-                        <button 
-                          onClick={(e) => handleToggleWishlist(e, product)}
-                          title="Add to Wishlist" 
-                          className="w-7 h-7 rounded-full bg-white border border-gray-200 cursor-pointer flex items-center justify-center text-xs shadow-xs hover:bg-gray-50 hover:text-[#7A1A1A] transition-colors"
-                        >
-                          🤍
-                        </button>
+                        {(() => {
+                          const isLiked = wishlistIds.includes(product._id);
+                          return (
+                            <button 
+                              onClick={(e) => handleToggleWishlist(e, product)}
+                              title={isLiked ? "Remove from Wishlist" : "Add to Wishlist"}
+                              className={`w-8 h-8 rounded-full bg-white/95 backdrop-blur-xs border cursor-pointer flex items-center justify-center shadow-xs transition-all group/wish ${
+                                isLiked 
+                                  ? 'text-[#7A1A1A] border-[#7A1A1A]/40 bg-[#fdf2f2]' 
+                                  : 'text-gray-400 border-gray-200 hover:text-[#7A1A1A] hover:border-[#7A1A1A]/30'
+                              }`}
+                            >
+                              <Heart className={`w-4 h-4 transition-transform group-hover/wish:scale-110 ${isLiked ? 'fill-[#7A1A1A]' : ''}`} />
+                            </button>
+                          );
+                        })()}
                       </div>
                     </Link>
 

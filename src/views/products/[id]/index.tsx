@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Heart } from 'lucide-react';
 import { productService } from '@/src/services/product.service';
 import { useAppDispatch } from '@/src/redux/hooks';
 import { addToCart } from '@/src/redux/slices/cartSlice';
@@ -25,6 +25,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const dispatch = useAppDispatch();
   const [isAddingToCart, setIsAddingToCart] = useState<boolean>(false);
   const [addingRelId, setAddingRelId] = useState<string | null>(null);
+  const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('carneiz_wishlist') || '[]');
+      if (Array.isArray(stored)) {
+        setWishlistIds(stored.map((p: any) => p._id));
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -132,11 +142,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       const exists = wishlist.some((p: any) => p._id === item._id);
       if (exists) {
         wishlist = wishlist.filter((p: any) => p._id !== item._id);
-        setIsWishlisted(false);
+        setWishlistIds(wishlist.map((p: any) => p._id));
+        if (product && item._id === product._id) setIsWishlisted(false);
         setCartToast(`Removed ${item.name} from Wishlist`);
       } else {
         wishlist.push(item);
-        setIsWishlisted(true);
+        setWishlistIds(wishlist.map((p: any) => p._id));
+        if (product && item._id === product._id) setIsWishlisted(true);
         setCartToast(`Saved ${item.name} to Wishlist!`);
       }
       localStorage.setItem('carneiz_wishlist', JSON.stringify(wishlist));
@@ -387,7 +399,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             onClick={() => setIsWishlisted(!isWishlisted)}
             className="w-fit bg-transparent border-none text-[#7A1A1A] hover:text-[#601414] cursor-pointer font-bold text-sm flex items-center gap-2 mt-2"
           >
-            <span>{isWishlisted ? '❤️' : '🤍'}</span> 
+            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-[#7A1A1A] text-[#7A1A1A]' : 'text-[#7A1A1A]'}`} />
             {isWishlisted ? 'Added to Wishlist' : 'Add to Wishlist'}
           </button>
 
@@ -684,22 +696,24 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       </span>
                     )}
 
-                    {/* Top Right Action Icons matching Screenshot 1 & 3 */}
+                    {/* Top Right Action Icons */}
                     <div className="absolute top-2.5 right-2.5 z-10 flex flex-row items-center gap-1.5 opacity-90">
-                      <button 
-                        onClick={(e) => handleAddToCompare(item, e)}
-                        title="Compare product" 
-                        className="w-7 h-7 rounded-full bg-white border border-gray-200 cursor-pointer flex items-center justify-center text-xs shadow-sm hover:bg-gray-50 hover:text-[#7A1A1A] transition-colors"
-                      >
-                        🔄
-                      </button>
-                      <button 
-                        onClick={(e) => handleToggleWishlist(item, e)}
-                        title="Add to Wishlist" 
-                        className="w-7 h-7 rounded-full bg-white border border-gray-200 cursor-pointer flex items-center justify-center text-xs shadow-sm hover:bg-gray-50 hover:text-[#7A1A1A] transition-colors"
-                      >
-                        🤍
-                      </button>
+                      {(() => {
+                        const isLiked = wishlistIds.includes(item._id);
+                        return (
+                          <button 
+                            onClick={(e) => handleToggleWishlist(item, e)}
+                            title={isLiked ? "Remove from Wishlist" : "Add to Wishlist"}
+                            className={`w-7 h-7 rounded-full bg-white/95 backdrop-blur-xs border cursor-pointer flex items-center justify-center shadow-sm transition-all group/wish ${
+                              isLiked 
+                                ? 'text-[#7A1A1A] border-[#7A1A1A]/40 bg-[#fdf2f2]' 
+                                : 'text-gray-400 border-gray-200 hover:text-[#7A1A1A] hover:border-[#7A1A1A]/30'
+                            }`}
+                          >
+                            <Heart className={`w-3.5 h-3.5 transition-transform group-hover/wish:scale-110 ${isLiked ? 'fill-[#7A1A1A]' : ''}`} />
+                          </button>
+                        );
+                      })()}
                     </div>
 
                     <div 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Heart } from 'lucide-react';
 import { productService } from '@/src/services/product.service';
 import { useAppDispatch } from '@/src/redux/hooks';
 import { addToCart } from '@/src/redux/slices/cartSlice';
@@ -25,6 +25,17 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [cartToast, setCartToast] = useState<string | null>(null);
+  const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+
+  // Load wishlist from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('carneiz_wishlist') || '[]');
+      if (Array.isArray(stored)) {
+        setWishlistIds(stored.map((p: any) => p._id));
+      }
+    } catch {}
+  }, []);
 
   // Sync category state from URL if changed externally
   useEffect(() => {
@@ -133,9 +144,11 @@ export default function ProductsPage() {
       const exists = wishlist.some((p: any) => p._id === product._id);
       if (exists) {
         wishlist = wishlist.filter((p: any) => p._id !== product._id);
+        setWishlistIds(wishlist.map((p: any) => p._id));
         setCartToast(`Removed ${product.name} from Wishlist`);
       } else {
         wishlist.push(product);
+        setWishlistIds(wishlist.map((p: any) => p._id));
         setCartToast(`Added ${product.name} to Wishlist!`);
       }
       localStorage.setItem('carneiz_wishlist', JSON.stringify(wishlist));
@@ -304,20 +317,22 @@ export default function ProductsPage() {
                         )}
 
                         <div className="absolute top-2 right-2 z-10 flex flex-row items-center gap-1.5 opacity-90">
-                          <button 
-                            onClick={(e) => handleAddToCompare(e, product)}
-                            title="Compare product" 
-                            className="w-6 h-6 rounded-full bg-white border border-gray-200 cursor-pointer flex items-center justify-center text-[10px] shadow-sm hover:bg-gray-50 hover:text-[#7A1A1A] transition-colors"
-                          >
-                            🔄
-                          </button>
-                          <button 
-                            onClick={(e) => handleToggleWishlist(e, product)}
-                            title="Add to Wishlist" 
-                            className="w-6 h-6 rounded-full bg-white border border-gray-200 cursor-pointer flex items-center justify-center text-[10px] shadow-sm hover:bg-gray-50 hover:text-[#7A1A1A] transition-colors"
-                          >
-                            🤍
-                          </button>
+                          {(() => {
+                            const isLiked = wishlistIds.includes(product._id);
+                            return (
+                              <button 
+                                onClick={(e) => handleToggleWishlist(e, product)}
+                                title={isLiked ? "Remove from Wishlist" : "Add to Wishlist"}
+                                className={`w-7 h-7 rounded-full bg-white/95 backdrop-blur-xs border cursor-pointer flex items-center justify-center shadow-sm transition-all group/wish ${
+                                  isLiked 
+                                    ? 'text-[#7A1A1A] border-[#7A1A1A]/40 bg-[#fdf2f2]' 
+                                    : 'text-gray-400 border-gray-200 hover:text-[#7A1A1A] hover:border-[#7A1A1A]/30'
+                                }`}
+                              >
+                                <Heart className={`w-3.5 h-3.5 transition-transform group-hover/wish:scale-110 ${isLiked ? 'fill-[#7A1A1A]' : ''}`} />
+                              </button>
+                            );
+                          })()}
                         </div>
 
                         <div 

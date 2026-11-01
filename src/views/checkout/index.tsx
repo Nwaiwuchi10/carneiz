@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Check, ShieldCheck, CreditCard, Banknote, Loader2, Copy, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Loader2, Copy, CheckCircle2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/src/redux/hooks';
 import { clearCart } from '@/src/redux/slices/cartSlice';
 
@@ -14,7 +14,7 @@ export default function CheckoutView() {
   const items = useAppSelector((state) => state.cart.items);
   const discountPercent = useAppSelector((state) => state.cart.discountPercent);
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('home');
   const [fulfillmentType, setFulfillmentType] = useState<'delivery' | 'pickup'>('delivery');
 
@@ -62,6 +62,23 @@ export default function CheckoutView() {
   const [confirmedOrderId, setConfirmedOrderId] = useState<string>('');
   const [confirmedDeliveryPin, setConfirmedDeliveryPin] = useState<string>('');
   const [copiedPin, setCopiedPin] = useState<boolean>(false);
+
+  // Authentication check: redirect unauthenticated users to login
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem('user') || localStorage.getItem('carneiz_user');
+      const token = localStorage.getItem('token');
+      if (!userStr && !token) {
+        router.replace('/login?redirect=/checkout');
+        return;
+      }
+      setIsAuthChecking(false);
+    } catch {
+      router.replace('/login?redirect=/checkout');
+    }
+  }, [router]);
 
   // Load user profile & saved addresses if available
   useEffect(() => {
@@ -124,7 +141,7 @@ export default function CheckoutView() {
     const txIdParam = searchParams.get('transaction_id');
 
     if (statusParam === 'success' || orderIdParam) {
-      setStep(3);
+      setStep(2);
       if (orderIdParam) setConfirmedOrderId(orderIdParam);
       dispatch(clearCart());
 
@@ -164,17 +181,21 @@ export default function CheckoutView() {
     }));
   };
 
-  const handleProceedToPayment = () => {
-    setIsSubmitting(true);
-    setResponseMsg(null);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setStep(2);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 400);
-  };
-
   const handleCompleteOrder = async () => {
+    // Validate required fields before submitting to gateway
+    if (!formData.fullName.trim()) {
+      setResponseMsg({ text: 'Please enter your full name.', type: 'error' });
+      return;
+    }
+    if (!formData.phoneNumber.trim()) {
+      setResponseMsg({ text: 'Please enter your phone number.', type: 'error' });
+      return;
+    }
+    if (fulfillmentType === 'delivery' && !formData.streetAddress.trim()) {
+      setResponseMsg({ text: 'Please enter your delivery street address.', type: 'error' });
+      return;
+    }
+
     setIsSubmitting(true);
     setResponseMsg(null);
 
@@ -182,7 +203,7 @@ export default function CheckoutView() {
       fulfillmentType,
       pickupAddress: storeConfig.pickupAddress,
       name: formData.fullName,
-      email: 'customer@carneiz.com',
+      email: formData.newAccountEmail || 'customer@carneiz.com',
       phone: formData.phoneNumber,
       address: fulfillmentType === 'pickup' 
         ? storeConfig.pickupAddress 
@@ -197,7 +218,7 @@ export default function CheckoutView() {
       deliveryWindow: fulfillmentType === 'pickup' 
         ? `In-Store Pickup (${storeConfig.pickupHours})` 
         : deliveryOption.estimate,
-      paymentMethod,
+      paymentMethod: 'flutterwave',
     };
 
     try {
@@ -214,13 +235,12 @@ export default function CheckoutView() {
         setConfirmedOrderId(data.orderId || `#CMZ-2026-${Math.floor(1000 + Math.random() * 9000)}`);
         if (data.deliveryPin) setConfirmedDeliveryPin(data.deliveryPin);
 
-        // If Flutterwave payment link was returned and payment method is flutterwave
-        if (data.paymentLink && paymentMethod === 'flutterwave') {
+        // If Flutterwave payment link was returned, redirect immediately to payment gateway
+        if (data.paymentLink) {
           setResponseMsg({
             text: 'Redirecting to Flutterwave secure payment gateway...',
             type: 'success',
           });
-          // Redirect the user immediately to Flutterwave Payment Gateway!
           window.location.href = data.paymentLink;
           return;
         }
@@ -230,7 +250,7 @@ export default function CheckoutView() {
           type: 'success',
         });
         dispatch(clearCart());
-        setStep(3);
+        setStep(2);
         setIsSubmitting(false);
       } else {
         throw new Error(data.message || 'Checkout failed');
@@ -259,6 +279,14 @@ export default function CheckoutView() {
     setTimeout(() => setCopiedPin(false), 2500);
   };
 
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fcfcfd]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#7A1A1A]" />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#fcfcfd] min-h-screen pb-16">
       {/* Toast Response Notification */}
@@ -271,7 +299,7 @@ export default function CheckoutView() {
         </div>
       )}
 
-      {/* Checkout Stepper Header matching Screenshot 1, 2, 3, 4, 5 */}
+      {/* Checkout Stepper Header */}
       <div className="bg-white border-b border-gray-100 py-4 px-4 md:px-[5%]">
         <div className="max-w-6xl mx-auto flex items-center gap-3 sm:gap-6 text-xs sm:text-sm overflow-x-auto whitespace-nowrap">
           {/* Step 1 */}
@@ -281,35 +309,21 @@ export default function CheckoutView() {
             <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
               step === 1 ? 'bg-[#7A1A1A] text-white' : 'bg-[#16a34a] text-white'
             }`}>
-              {step > 1 ? '✓' : '1'}
+              {step === 2 ? '✓' : '1'}
             </div>
-            <span>Delivery Address</span>
+            <span>Fulfillment & Checkout</span>
           </div>
 
           <span className="text-gray-300">›</span>
 
           {/* Step 2 */}
           <div className={`flex items-center gap-2 font-bold ${
-            step === 2 ? 'text-[#7A1A1A]' : step === 3 ? 'text-[#16a34a]' : 'text-gray-400 font-normal'
+            step === 2 ? 'text-[#16a34a]' : 'text-gray-400 font-normal'
           }`}>
             <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
-              step === 2 ? 'bg-[#7A1A1A] text-white' : step === 3 ? 'bg-[#16a34a] text-white' : 'bg-gray-200 text-gray-500'
+              step === 2 ? 'bg-[#16a34a] text-white' : 'border border-gray-300 text-gray-400'
             }`}>
-              {step === 3 ? '✓' : '2'}
-            </div>
-            <span>Secure Payment</span>
-          </div>
-
-          <span className="text-gray-300">›</span>
-
-          {/* Step 3 */}
-          <div className={`flex items-center gap-2 font-bold ${
-            step === 3 ? 'text-[#16a34a]' : 'text-gray-400 font-normal'
-          }`}>
-            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
-              step === 3 ? 'bg-[#16a34a] text-white' : 'border border-gray-300 text-gray-400'
-            }`}>
-              {step === 3 ? '✓' : '3'}
+              {step === 2 ? '✓' : '2'}
             </div>
             <span>Confirmation</span>
           </div>
@@ -318,8 +332,8 @@ export default function CheckoutView() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 md:pt-10">
         
-        {/* STEP 3: ORDER CONFIRMED VIEW strictly matching Screenshots 1, 2, 3 */}
-        {step === 3 ? (
+        {/* STEP 2: ORDER CONFIRMED VIEW strictly matching Screenshots 1, 2, 3 */}
+        {step === 2 ? (
           <div className="max-w-2xl mx-auto space-y-6">
             
             {/* Main Order Confirmed Card */}
@@ -810,147 +824,19 @@ export default function CheckoutView() {
                       </div>
                     </>
                   )}
-                </>
-              )}
 
-              {/* STEP 2: SECURE PAYMENT matching Screenshot 5 */}
-              {step === 2 && (
-                <>
-                  {/* Select Payment Method matching Screenshot 5 */}
-                  <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-4">
-                    <h3 className="text-base font-bold text-gray-900 m-0">Select Payment Method</h3>
-                    <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                      PAYMENT METHOD
-                    </span>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Flutterwave / Paystack */}
-                      <div
-                        onClick={() => setPaymentMethod('flutterwave')}
-                        className={`p-4 rounded-xl border-2 cursor-pointer flex justify-between items-center transition-all ${
-                          paymentMethod === 'flutterwave'
-                            ? 'border-[#7A1A1A] bg-[#fdf5f5]'
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <CreditCard className="w-5 h-5 text-[#7A1A1A]" />
-                          <span className="font-bold text-sm text-gray-900">
-                            Flutterwave (Card / Transfer)
-                          </span>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          paymentMethod === 'flutterwave' ? 'border-[#7A1A1A] bg-[#7A1A1A]' : 'border-gray-300'
-                        }`}>
-                          {paymentMethod === 'flutterwave' && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                      </div>
-
-                      {/* Cash on Delivery */}
-                      <div
-                        onClick={() => setPaymentMethod('cash')}
-                        className={`p-4 rounded-xl border-2 cursor-pointer flex justify-between items-center transition-all ${
-                          paymentMethod === 'cash'
-                            ? 'border-[#7A1A1A] bg-[#fdf5f5]'
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Banknote className="w-5 h-5 text-gray-600" />
-                          <span className="font-bold text-sm text-gray-900">
-                            Cash on Delivery
-                          </span>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          paymentMethod === 'cash' ? 'border-[#7A1A1A] bg-[#7A1A1A]' : 'border-gray-300'
-                        }`}>
-                          {paymentMethod === 'cash' && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card Information Form matching Screenshot 5 */}
-                  {paymentMethod === 'flutterwave' && (
-                    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-4">
-                      <h3 className="text-base font-bold text-gray-900 m-0">Card Information</h3>
-
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                          Cardholder Name
-                        </label>
-                        <input
-                          type="text"
-                          name="cardName"
-                          value={formData.cardName}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#7A1A1A]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                          Card Number
-                        </label>
-                        <input
-                          type="text"
-                          name="cardNumber"
-                          value={formData.cardNumber}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#7A1A1A]"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                            Expiry Date
-                          </label>
-                          <input
-                            type="text"
-                            name="expiry"
-                            value={formData.expiry}
-                            onChange={handleInputChange}
-                            placeholder="MM/YY"
-                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#7A1A1A]"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                            CVV
-                          </label>
-                          <input
-                            type="password"
-                            name="cvv"
-                            value={formData.cvv}
-                            onChange={handleInputChange}
-                            placeholder="***"
-                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#7A1A1A]"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* SSL Encrypted Checkout Banner matching Screenshot 5 */}
+                  {/* SSL Encrypted Checkout Banner */}
                   <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex items-center gap-3.5">
                     <div className="w-10 h-10 rounded-xl bg-[#e8f9ed] text-[#16a34a] flex items-center justify-center shrink-0">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="m-0 text-xs font-bold text-gray-900">SSL Encrypted Checkout</h4>
+                      <h4 className="m-0 text-xs font-bold text-gray-900">Direct & Secure Payment Gateway</h4>
                       <p className="m-0 text-xs text-gray-500 mt-0.5">
-                        Your credentials are safe and processed with bank-level Flutterwave encryption algorithms.
+                        Your transaction is encrypted and securely processed directly via Flutterwave.
                       </p>
                     </div>
                   </div>
-
-                  <button
-                    onClick={() => setStep(1)}
-                    className="text-xs text-gray-500 hover:text-gray-900 underline font-semibold bg-transparent border-none cursor-pointer p-0"
-                  >
-                    &larr; Back to Delivery Address
-                  </button>
                 </>
               )}
 
@@ -1011,40 +897,21 @@ export default function CheckoutView() {
                   </span>
                 </div>
 
-                {/* Action button matching Screenshot 4 & 5 */}
-                {step === 1 ? (
-                  <button
-                    onClick={handleProceedToPayment}
-                    disabled={isSubmitting}
-                    className="w-full py-4 bg-[#7A1A1A] hover:bg-[#601414] text-white rounded-xl font-bold text-xs tracking-wider uppercase transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>VERIFYING...</span>
-                      </>
-                    ) : (
-                      'CONTINUE TO PAYMENT'
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleCompleteOrder}
-                    disabled={isSubmitting}
-                    className="w-full py-4 bg-[#7A1A1A] hover:bg-[#601414] text-white rounded-xl font-bold text-xs tracking-wider uppercase transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>PROCESSING WITH FLUTTERWAVE...</span>
-                      </>
-                    ) : paymentMethod === 'cash' ? (
-                      'CONFIRM CASH ORDER'
-                    ) : (
-                      'CONTINUE TO PAYMENT'
-                    )}
-                  </button>
-                )}
+                {/* Action button */}
+                <button
+                  onClick={handleCompleteOrder}
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-[#7A1A1A] hover:bg-[#601414] text-white rounded-xl font-bold text-xs tracking-wider uppercase transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>CONNECTING TO PAYMENT GATEWAY...</span>
+                    </>
+                  ) : (
+                    'PROCEED TO SECURE PAYMENT'
+                  )}
+                </button>
 
               </div>
             </div>

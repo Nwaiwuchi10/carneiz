@@ -42,6 +42,11 @@ export default function Register() {
         window.dispatchEvent(new Event('carneiz_user_changed'));
       }
       setModal({ isOpen: true, message: res.message || 'Registration successful! Welcome to Carneiz.' });
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectUrl = searchParams.get('redirect') || '/account/notifications';
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 1200);
     } catch (error: any) {
       setModal({ isOpen: true, message: error.response?.data?.message || 'Registration failed' });
     } finally {
