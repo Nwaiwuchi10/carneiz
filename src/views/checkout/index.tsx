@@ -223,6 +223,9 @@ export default function CheckoutView() {
         ? `In-Store Pickup (${storeConfig.pickupHours})` 
         : deliveryOption.estimate,
       paymentMethod: 'flutterwave',
+      redirect_url: typeof window !== 'undefined'
+        ? (process.env.NEXT_PUBLIC_CALLBACK_URL || `${window.location.origin}/checkout`)
+        : (process.env.NEXT_PUBLIC_CALLBACK_URL || 'https://carneiz-eta.vercel.app/checkout'),
     };
 
     try {
