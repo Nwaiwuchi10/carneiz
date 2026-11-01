@@ -138,6 +138,7 @@ export default function Register() {
           Already have an account? <a href="/login" className="text-[#8B1919] font-bold no-underline hover:underline">Log In</a>
         </p>
         
+        {/* Google OAuth (Temporarily commented out)
         <div className="flex items-center my-6">
           <hr className="flex-1 border-none border-t border-gray-200" />
           <span className="px-3 text-gray-400 text-[0.8rem] tracking-wider font-medium">OR SIGN UP WITH</span>
@@ -148,6 +149,7 @@ export default function Register() {
           <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" width="20" />
           Continue with Google
         </button>
+        */}
       </div>
 
       <Modal isOpen={modal.isOpen} message={modal.message} onClose={() => setModal({ ...modal, isOpen: false })} />

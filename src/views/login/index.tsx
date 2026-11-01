@@ -150,7 +150,7 @@ export default function Login() {
           </Link>
         </form>
 
-        {/* OR CONNECT WITH divider matching Screenshot 3 */}
+        {/* Google OAuth (Temporarily commented out)
         <div className="flex items-center my-6">
           <hr className="flex-1 border-none border-t border-gray-100" />
           <span className="px-3 text-gray-400 text-[10px] tracking-wider uppercase font-semibold">
@@ -159,7 +159,6 @@ export default function Login() {
           <hr className="flex-1 border-none border-t border-gray-100" />
         </div>
 
-        {/* Continue with Google button matching Screenshot 3 */}
         <button 
           type="button" 
           onClick={() => setResponseMsg({ text: 'Google OAuth redirection in progress...', type: 'success' })}
@@ -173,6 +172,7 @@ export default function Login() {
           </svg>
           Continue with Google
         </button>
+        */}
 
         <p className="text-center mt-6 text-xs text-gray-500 mb-0">
           Don't have an account?{' '}
