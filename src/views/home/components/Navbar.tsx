@@ -126,8 +126,6 @@ export default function Navbar() {
     { label: 'Shop', href: '/products' },
     { label: 'Fresh Meat', href: '/products?category=Fresh%20Meat' },
     { label: 'Spices', href: '/products?category=Spices' },
-    { label: 'Recipes', href: '#' },
-    { label: 'Wholesale', href: '#' },
     { label: 'About Us', href: '/about-us' },
     { label: 'Contact', href: '/contact' },
     { label: 'Track Order', href: '/track-order' },
@@ -382,9 +380,11 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <ul className="hidden lg:flex list-none gap-8 m-0 p-0">
+        <ul className="hidden md:flex list-none gap-4 lg:gap-7 m-0 p-0">
           <li><Link href="/" className={getLinkClass('/')}>Home</Link></li>
           <li><Link href="/products" className={getLinkClass('/products')}>Shop</Link></li>
+          <li><Link href="/products?category=Fresh%20Meat" className={getLinkClass('/products?category=Fresh%20Meat')}>Fresh Meat</Link></li>
+          <li><Link href="/products?category=Spices" className={getLinkClass('/products?category=Spices')}>Spices</Link></li>
           <li><Link href="/about-us" className={getLinkClass('/about-us')}>About Us</Link></li>
           <li><Link href="/contact" className={getLinkClass('/contact')}>Contact</Link></li>
           <li><Link href="/track-order" className={getLinkClass('/track-order')}>Track Order</Link></li>
