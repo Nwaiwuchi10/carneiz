@@ -12,6 +12,7 @@ export default function CheckoutView() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const items = useAppSelector((state) => state.cart.items);
+  const discountCode = useAppSelector((state) => state.cart.discountCode);
   const discountPercent = useAppSelector((state) => state.cart.discountPercent);
 
   const [step, setStep] = useState<1 | 2>(1);

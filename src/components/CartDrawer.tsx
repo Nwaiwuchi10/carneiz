@@ -22,23 +22,41 @@ export default function CartDrawer() {
 
   const [inputCode, setInputCode] = useState(discountCode || '');
   const [applyingDiscount, setApplyingDiscount] = useState(false);
-  const [discountMsg, setDiscountMsg] = useState<string | null>(null);
+  const [discountMsg, setDiscountMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   if (!isOpen) return null;
 
   const totalCount = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const subtotal = items.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
 
-  const handleApplyDiscount = (e: React.FormEvent) => {
+  const handleApplyDiscount = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputCode.trim()) return;
+    const cleanCode = inputCode.trim();
+    if (!cleanCode) return;
     setApplyingDiscount(true);
-    setTimeout(() => {
-      dispatch(applyDiscount({ code: inputCode.trim(), percent: 5 }));
-      setDiscountMsg('Promo code applied: 5% discount!');
+    setDiscountMsg(null);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const res = await fetch(`${apiUrl}/orders/validate-promo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: cleanCode }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.valid) {
+        dispatch(applyDiscount({ code: data.code, percent: data.percent }));
+        setDiscountMsg({ text: `Code applied: ${data.percent}% discount!`, type: 'success' });
+      } else {
+        throw new Error(data.message || 'Invalid or expired discount code.');
+      }
+    } catch (err: any) {
+      setDiscountMsg({ text: err.message || 'Invalid discount code.', type: 'error' });
+    } finally {
       setApplyingDiscount(false);
-      setTimeout(() => setDiscountMsg(null), 3500);
-    }, 600);
+      setTimeout(() => setDiscountMsg(null), 4000);
+    }
   };
 
   const handleViewCart = () => {
@@ -77,8 +95,13 @@ export default function CartDrawer() {
 
           {/* Feedback banner */}
           {discountMsg && (
-            <div className="bg-[#e8f9ed] text-[#16a34a] text-xs font-bold px-4 py-2 border-b border-[#bbf7d0] flex items-center gap-2">
-              <span>✓</span> {discountMsg}
+            <div className={`text-xs font-bold px-4 py-2 border-b flex items-center gap-2 ${
+              discountMsg.type === 'success'
+                ? 'bg-[#e8f9ed] text-[#16a34a] border-[#bbf7d0]'
+                : 'bg-red-50 text-red-600 border-red-200'
+            }`}>
+              <span>{discountMsg.type === 'success' ? '✓' : '⚠️'}</span>
+              <span>{discountMsg.text}</span>
             </div>
           )}
 

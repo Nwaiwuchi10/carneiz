@@ -29,16 +29,40 @@ export default function CartView() {
   const discountAmount = discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0;
   const grandTotal = Math.max(0, subtotal + (items.length > 0 ? deliveryFee : 0) - discountAmount);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputCode.trim()) return;
+    const cleanCode = inputCode.trim();
+    if (!cleanCode) return;
     setIsApplying(true);
-    setTimeout(() => {
-      dispatch(applyDiscount({ code: inputCode.trim(), percent: 5 }));
-      setAlertMsg({ text: `Discount code "${inputCode.trim()}" applied! You saved 5% on this order.`, type: 'success' });
+    setAlertMsg(null);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4300';
+      const res = await fetch(`${apiUrl}/orders/validate-promo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: cleanCode }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.valid) {
+        dispatch(applyDiscount({ code: data.code, percent: data.percent }));
+        setAlertMsg({
+          text: `Discount code "${data.code}" applied! You saved ${data.percent}% on this order.`,
+          type: 'success',
+        });
+      } else {
+        throw new Error(data.message || 'Invalid or expired discount code.');
+      }
+    } catch (err: any) {
+      setAlertMsg({
+        text: err.message || 'Invalid discount code.',
+        type: 'error',
+      });
+    } finally {
       setIsApplying(false);
       setTimeout(() => setAlertMsg(null), 4000);
-    }, 600);
+    }
   };
 
   const handleProceedToCheckout = () => {
