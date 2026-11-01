@@ -36,3 +36,4 @@ export function getErrorMessage(error: any, fallback = 'An unexpected error occu
 
   return fallback;
 }
+
