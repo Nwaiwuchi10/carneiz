@@ -34,14 +34,12 @@ export default function Footer() {
               href={CARNEIZ_CONTACT.socials.instagram.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`rounded-2xl overflow-hidden shadow-xs bg-gray-50 border border-gray-100 block transition-transform active:scale-[0.99] ${
-                i === 1 ? 'w-[75%] max-w-[280px] mx-auto max-h-[300px]' : 'w-full'
-              }`}
+              className="w-full aspect-[3/2] rounded-2xl overflow-hidden shadow-xs bg-gray-50 border border-gray-100 block transition-transform active:scale-[0.99]"
             >
               <img
                 src={img}
                 alt={`Carneiz culinary recipe ${i + 1}`}
-                className={`w-full object-cover block ${i === 1 ? 'h-[260px]' : 'h-auto'}`}
+                className="w-full h-full object-cover block"
                 loading="lazy"
               />
             </a>
